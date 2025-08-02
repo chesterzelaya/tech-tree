@@ -3,35 +3,16 @@ import {
   CssBaseline,
   ThemeProvider,
   createTheme,
-  Container,
-  Grid,
-  Paper,
   Snackbar,
   Alert,
   Box,
   Typography,
-  Fab,
   Backdrop,
   CircularProgress,
-  AppBar,
-  Toolbar,
-  IconButton,
-  Drawer,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemButton,
-  Switch,
-  FormControlLabel,
 } from '@mui/material';
 import { 
   Moon, 
-  Sun, 
-  Settings, 
-  History, 
-  Download,
-  Menu,
+  Sun,
 } from 'lucide-react';
 import { SearchInterface } from './components/SearchInterface';
 import { TreeVisualization } from './components/TreeVisualization';
@@ -57,8 +38,6 @@ function App() {
   // UI state
   const [error, setError] = useState<string | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<any[]>([]);
 
   // Theme
   const theme = createTheme({
@@ -72,7 +51,7 @@ function App() {
       },
     },
     typography: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Space Mono", "Consolas", "Monaco", "Courier New", monospace',
       h4: {
         fontWeight: 600,
       },
@@ -102,13 +81,7 @@ function App() {
     }
   `;
 
-  // Load recent searches on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('recentSearches');
-    if (saved) {
-      setRecentSearches(JSON.parse(saved));
-    }
-  }, []);
+
 
   // Save dark mode preference
   useEffect(() => {
@@ -163,120 +136,16 @@ function App() {
     });
   }, []);
 
-  const handleExportData = useCallback(() => {
-    if (!treeData) return;
-    
-    const csvData = DataTransformUtils.exportToCSV(treeData);
-    const blob = new Blob([csvData], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${treeData.name}_analysis.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, [treeData]);
 
-  const handleRecentSearchSelect = useCallback(async (search: any) => {
-    const request: SearchRequest = {
-      term: search.term,
-      max_depth: search.depth || 3,
-      max_results: 8,
-    };
-    
-    handleAnalysisStart(request);
-    
-    try {
-      const result = await WikiEngineAPI.analyzeTermRecursive(request);
-      handleAnalysisComplete(result);
-    } catch (error: any) {
-      handleError(error.message);
-    }
-    
-    setSidebarOpen(false);
-  }, [handleAnalysisStart, handleAnalysisComplete, handleError]);
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <style>{floatKeyframes}</style>
       
-      {/* App Bar */}
-      <AppBar position="sticky" elevation={1}>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            edge="start"
-            onClick={() => setSidebarOpen(true)}
-            sx={{ mr: 2 }}
-          >
-            <Menu />
-          </IconButton>
-          
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Wiki Engineering Analyzer
-          </Typography>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {treeData && (
-              <IconButton color="inherit" onClick={handleExportData}>
-                <Download size={20} />
-              </IconButton>
-            )}
-            
-            <IconButton color="inherit" onClick={() => setDarkMode(!darkMode)}>
-              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </IconButton>
-          </Box>
-        </Toolbar>
-      </AppBar>
 
-      {/* Sidebar */}
-      <Drawer
-        anchor="left"
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      >
-        <Box sx={{ width: 300, p: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Settings & History
-          </Typography>
-          
-          <FormControlLabel
-            control={
-              <Switch
-                checked={darkMode}
-                onChange={(e) => setDarkMode(e.target.checked)}
-              />
-            }
-            label="Dark Mode"
-          />
-          
-          {recentSearches.length > 0 && (
-            <>
-              <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>
-                Recent Searches
-              </Typography>
-              <List dense>
-                {recentSearches.slice(0, 10).map((search, index) => (
-                  <ListItem key={index} disablePadding>
-                    <ListItemButton onClick={() => handleRecentSearchSelect(search)}>
-                      <ListItemIcon>
-                        <History size={16} />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={search.term}
-                        secondary={`${search.results || 0} principles • ${new Date(search.timestamp).toLocaleDateString()}`}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                ))}
-              </List>
-            </>
-          )}
-        </Box>
-      </Drawer>
+
+
 
       {/* Main Content - Immersive 3D Interface */}
       <Box sx={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
@@ -285,12 +154,12 @@ function App() {
         <Box 
           sx={{ 
             position: 'absolute',
-            top: 20,
+            top: treeData ? 20 : '50%',
             left: '50%',
             zIndex: 10,
             width: treeData ? '400px' : '600px',
             transition: 'all 0.5s ease-in-out',
-            transform: 'translateX(-50%)',
+            transform: treeData ? 'translateX(-50%)' : 'translate(-50%, -50%)',
             opacity: treeData ? 0.8 : 1,
           }}
         >
@@ -338,14 +207,7 @@ function App() {
               },
             }}
           >
-            <Box sx={{ textAlign: 'center', color: 'white', opacity: 0.6 }}>
-              <Typography variant="h3" sx={{ mb: 2, fontWeight: 300 }}>
-                Engineering Knowledge Universe
-              </Typography>
-              <Typography variant="h6" sx={{ opacity: 0.8 }}>
-                Explore the connections between engineering principles in 3D space
-              </Typography>
-            </Box>
+
           </Box>
         )}
 
