@@ -20,6 +20,9 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 dashmap = "5.5"
 urlencoding = "2.1"
 chrono = { version = "0.4", features = ["serde"] }
+ort = { version = "2.0.0-rc.10", features = ["load-dynamic"] }
+tokenizers = "0.20"
+ndarray = "0.15"
 
 # Optional WASM support
 [target.'cfg(target_arch = "wasm32")'.dependencies]
