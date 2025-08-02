@@ -10,10 +10,7 @@ import {
   Backdrop,
   CircularProgress,
 } from '@mui/material';
-import { 
-  Moon, 
-  Sun,
-} from 'lucide-react';
+
 import { SearchInterface } from './components/SearchInterface';
 import { TreeVisualization } from './components/TreeVisualization';
 import { PrincipleDetails } from './components/PrincipleDetails';
@@ -73,11 +70,38 @@ function App() {
     },
   });
 
-  // Add keyframes for floating animation
-  const floatKeyframes = `
+  // Add keyframes for animations
+  const animationKeyframes = `
     @keyframes float {
       0%, 100% { transform: translateY(0px); }
       50% { transform: translateY(-10px); }
+    }
+
+
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes connect {
+      0% { stroke-dashoffset: 1000; opacity: 0; }
+      50% { opacity: 0.6; }
+      100% { stroke-dashoffset: 0; opacity: 0.2; }
+    }
+
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; transform: scale(0); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+
+    .playwrite-hu-title {
+      font-family: "Playwrite HU", cursive !important;
+      font-optical-sizing: auto;
+      font-weight: 300;
+      font-style: normal;
+      font-display: swap;
     }
   `;
 
@@ -141,20 +165,138 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <style>{floatKeyframes}</style>
+      <style>{animationKeyframes}</style>
       
 
 
 
 
+      {/* Animated Background */}
+      <Box 
+        sx={{ 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: -1,
+          background: `
+            radial-gradient(circle at 20% 80%, rgba(25, 118, 210, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(25, 118, 210, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(25, 118, 210, 0.05) 0%, transparent 50%),
+            linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)
+          `,
+          backgroundSize: '400% 400%',
+          animation: 'gradientShift 20s ease infinite',
+        }}
+      >
+
+
+        {/* Network Connection Lines */}
+        <svg
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            opacity: 0.3,
+          }}
+        >
+          {[...Array(8)].map((_, i) => (
+            <line
+              key={i}
+              x1={`${Math.random() * 100}%`}
+              y1={`${Math.random() * 100}%`}
+              x2={`${Math.random() * 100}%`}
+              y2={`${Math.random() * 100}%`}
+              stroke="rgba(25, 118, 210, 0.2)"
+              strokeWidth="1"
+              strokeDasharray="5,5"
+              style={{
+                animation: `connect ${Math.random() * 10 + 8}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            />
+          ))}
+        </svg>
+
+        {/* Sparkle Points */}
+        {[...Array(20)].map((_, i) => (
+          <Box
+            key={i}
+            sx={{
+              position: 'absolute',
+              width: '4px',
+              height: '4px',
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              background: 'rgba(25, 118, 210, 0.8)',
+              borderRadius: '50%',
+              boxShadow: '0 0 10px rgba(25, 118, 210, 0.6)',
+              animation: `sparkle ${Math.random() * 8 + 4}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 8}s`,
+            }}
+          />
+        ))}
+      </Box>
+
       {/* Main Content - Immersive 3D Interface */}
       <Box sx={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
         
+        {/* Landing Title - Only shown when no data */}
+        {!treeData && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '25%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              textAlign: 'center',
+              zIndex: 5,
+              transition: 'all 0.5s ease-in-out',
+              width: '100%',
+              maxWidth: '800px',
+            }}
+          >
+            <Typography
+              variant="h1"
+              className="playwrite-hu-title"
+              sx={{
+                fontSize: { xs: '3.5rem', sm: '4.5rem', md: '5.5rem' },
+                color: 'white',
+                textShadow: '0 0 30px rgba(25, 118, 210, 0.6)',
+                marginBottom: { xs: 3, sm: 4 },
+                letterSpacing: '0.02em',
+                lineHeight: 1.1,
+              }}
+            >
+              Tech Tree
+            </Typography>
+            <Typography
+              variant="h5"
+              sx={{
+                fontFamily: '"Space Mono", monospace',
+                fontSize: { xs: '1rem', sm: '1.2rem', md: '1.4rem' },
+                fontWeight: 400,
+                color: 'rgba(255, 255, 255, 0.8)',
+                textShadow: '0 0 15px rgba(25, 118, 210, 0.3)',
+                letterSpacing: '0.05em',
+                maxWidth: '700px',
+                margin: '0 auto',
+                marginBottom: { xs: 6, sm: 8 },
+                lineHeight: 1.4,
+                px: 2,
+              }}
+            >
+              Recursively explore through humanity's greatest inventions
+            </Typography>
+          </Box>
+        )}
+
         {/* Minimalist Floating Search Interface */}
         <Box 
           sx={{ 
             position: 'absolute',
-            top: treeData ? 20 : '50%',
+            top: treeData ? 20 : '55%',
             left: '50%',
             zIndex: 10,
             width: treeData ? '400px' : '600px',
@@ -172,7 +314,7 @@ function App() {
         </Box>
 
         {/* Main 3D Visualization */}
-        {treeData ? (
+        {treeData && (
           <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
             <TreeVisualization
               data={treeData}
@@ -181,33 +323,6 @@ function App() {
               expandedNodes={expandedNodes}
               onToggleExpanded={handleToggleExpanded}
             />
-          </Box>
-        ) : (
-          // Beautiful landing background when no data
-          <Box 
-            sx={{ 
-              position: 'absolute', 
-              top: 0, 
-              left: 0, 
-              width: '100%', 
-              height: '100%',
-              background: 'radial-gradient(ellipse at center, rgba(25, 118, 210, 0.1) 0%, rgba(0, 0, 0, 0.9) 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                background: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                animation: 'float 6s ease-in-out infinite',
-              },
-            }}
-          >
-
           </Box>
         )}
 
