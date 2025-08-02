@@ -110,9 +110,8 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = ({
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // Create vertical connection lines and rings for each depth level
+    // Create vertical connection lines for each depth level
     const connectionLines: THREE.Object3D[] = [];
-    const depthRings: THREE.Mesh[] = [];
 
     // Create nodes in hierarchical tree structure
     const nodes: SphereNode[] = [];
@@ -147,39 +146,41 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = ({
         
         const rootMesh = new THREE.Mesh(rootGeometry, rootMaterial);
         
-        // Add outer glow sphere for root
-        const rootGlowGeometry = new THREE.SphereGeometry(nodeRadius * 2.2, 32, 32);
-        const rootGlowMaterial = new THREE.MeshBasicMaterial({
-          color: color,
-          transparent: true,
-          opacity: 0.2,
-        });
-        const rootGlow = new THREE.Mesh(rootGlowGeometry, rootGlowMaterial);
         rootMesh.position.copy(position);
         rootMesh.castShadow = true;
         rootMesh.receiveShadow = true;
         (rootMesh as any).userData = { nodeData: rootNode, index: 0 };
 
-        rootGlow.position.copy(position);
-        scene.add(rootGlow);
-
-        // Enhanced root label
+        // Enhanced root label with high DPI support
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d')!;
-        canvas.width = 512;
-        canvas.height = 128;
+        const dpr = window.devicePixelRatio || 1;
+        const width = 512 * dpr;
+        const height = 128 * dpr;
         
-        context.shadowColor = 'rgba(255, 255, 255, 1)';
-        context.shadowBlur = 15;
-        context.font = 'bold 32px Inter, Arial';
+        canvas.width = width;
+        canvas.height = height;
+        context.scale(dpr, dpr);
+        
+        // Enable text smoothing
+        context.imageSmoothingEnabled = true;
+        (context as any).textRenderingOptimization = 'optimizeQuality';
+        
+        context.shadowColor = 'rgba(25, 118, 210, 0.8)';
+        context.shadowBlur = 4;
+        context.font = 'bold 32px "Space Mono", monospace';
         context.fillStyle = 'white';
         context.textAlign = 'center';
-        context.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-        context.lineWidth = 3;
+        context.strokeStyle = 'rgba(25, 118, 210, 0.4)';
+        context.lineWidth = 1;
         context.strokeText(rootNode.name, 256, 64);
         context.fillText(rootNode.name, 256, 64);
 
         const rootTexture = new THREE.CanvasTexture(canvas);
+        rootTexture.minFilter = THREE.LinearFilter;
+        rootTexture.magFilter = THREE.LinearFilter;
+        rootTexture.generateMipmaps = false;
+        
         const rootSpriteMaterial = new THREE.SpriteMaterial({ 
           map: rootTexture, 
           transparent: true,
@@ -199,39 +200,11 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = ({
           position: position.clone(),
           originalPosition: position.clone(),
         });
-
-        // Add glow ring around root
-        const ringGeometry = new THREE.RingGeometry(nodeRadius * 2, nodeRadius * 2.5, 32);
-        const ringMaterial = new THREE.MeshBasicMaterial({
-          color: 0x1976d2,
-          transparent: true,
-          opacity: 0.3,
-          side: THREE.DoubleSide,
-        });
-        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-        ring.position.set(0, yPosition, 0);
-        ring.rotation.x = -Math.PI / 2;
-        scene.add(ring);
-        depthRings.push(ring);
         
       } else {
         // Arrange child nodes in circular rings
         const ringRadius = baseRingRadius + (depth - 1) * 0.5;
         const angleStep = (2 * Math.PI) / depthNodes.length;
-        
-        // Create ring guide for this depth
-        const ringGeometry = new THREE.RingGeometry(ringRadius - 0.1, ringRadius + 0.1, 64);
-        const ringMaterial = new THREE.MeshBasicMaterial({
-          color: 0x1976d2,
-          transparent: true,
-          opacity: 0.1,
-          side: THREE.DoubleSide,
-        });
-        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-        ring.position.set(0, yPosition, 0);
-        ring.rotation.x = -Math.PI / 2;
-        scene.add(ring);
-        depthRings.push(ring);
         
         depthNodes.forEach((nodeData, nodeIndex) => {
           const angle = nodeIndex * angleStep;
@@ -257,38 +230,41 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = ({
           
           const mesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
           
-          // Add outer glow for each node
-          const glowGeometry = new THREE.SphereGeometry(nodeRadius * 1.4, 16, 16);
-          const glowMaterial = new THREE.MeshBasicMaterial({
-            color: color,
-            transparent: true,
-            opacity: 0.15,
-          });
-          const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-          glow.position.copy(position);
-          scene.add(glow);
           mesh.position.copy(position);
           mesh.castShadow = true;
           mesh.receiveShadow = true;
           (mesh as any).userData = { nodeData, index: nodeIndex };
 
-          // Create enhanced text label
+          // Create enhanced text label with high DPI support
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d')!;
-          canvas.width = 512;
-          canvas.height = 128;
+          const dpr = window.devicePixelRatio || 1;
+          const width = 512 * dpr;
+          const height = 128 * dpr;
           
-          context.shadowColor = 'rgba(255, 255, 255, 0.9)';
-          context.shadowBlur = 12;
-          context.font = 'bold 24px Inter, Arial';
+          canvas.width = width;
+          canvas.height = height;
+          context.scale(dpr, dpr);
+          
+          // Enable text smoothing
+          context.imageSmoothingEnabled = true;
+          (context as any).textRenderingOptimization = 'optimizeQuality';
+          
+          context.shadowColor = 'rgba(25, 118, 210, 0.6)';
+          context.shadowBlur = 2;
+          context.font = 'bold 24px "Space Mono", monospace';
           context.fillStyle = 'white';
           context.textAlign = 'center';
-          context.strokeStyle = 'rgba(0, 0, 0, 0.6)';
-          context.lineWidth = 2;
+          context.strokeStyle = 'rgba(25, 118, 210, 0.3)';
+          context.lineWidth = 0.5;
           context.strokeText(nodeData.name, 256, 64);
           context.fillText(nodeData.name, 256, 64);
 
           const texture = new THREE.CanvasTexture(canvas);
+          texture.minFilter = THREE.LinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          texture.generateMipmaps = false;
+          
           const spriteMaterial = new THREE.SpriteMaterial({ 
             map: texture, 
             transparent: true,
@@ -377,8 +353,8 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = ({
     pointLight2.position.set(-10, 0, -10);
     scene.add(pointLight2);
 
-    // Position camera for tree view
-    camera.position.set(0, 2, 8);
+    // Position camera for tree view (zoomed in closer)
+    camera.position.set(0, 2, 5);
     camera.lookAt(0, 0, 0);
 
     // Raycaster for click detection
@@ -464,22 +440,17 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = ({
           nodeItem.label.position.copy(labelPosition);
         });
 
-        // Rotate connection lines and rings
+        // Rotate connection lines
         connectionLines.forEach((obj) => {
           obj.rotation.y = sceneRef.current!.rotation.y;
-        });
-        
-        depthRings.forEach((ring) => {
-          ring.rotation.z = sceneRef.current!.rotation.y;
         });
       }
 
       renderer.render(scene, camera);
     };
 
-    sceneRef.current = { scene, camera, renderer, sphere: depthRings[0], nodes, animationId: 0, rotation: { x: 0, y: 0 } };
+    sceneRef.current = { scene, camera, renderer, sphere: nodes[0]?.mesh || new THREE.Mesh(), nodes, animationId: 0, rotation: { x: 0, y: 0 } };
     (sceneRef.current as any).connectionLines = connectionLines;
-    (sceneRef.current as any).depthRings = depthRings;
     animate();
 
     const handleResize = () => {
