@@ -1,6 +1,6 @@
-# Tech-Tree - Wikipedia Engineering Analysis Platform
+# Tech-Tree - Recursive Exploration Through Humans' Greatest Inventions
 
-A sophisticated web application that recursively analyzes engineering concepts from Wikipedia, extracting fundamental principles and their interconnections to create interactive 3D knowledge trees... allowing builders to explore the relationships between different engineering concepts.
+A web app (ts + rust) that recursively analyzes engineering concepts from Wikipedia api, extracting fundamental building blocks and their interconnections to create interactive 3D knowledge trees... allowing builders to explore the relationships between different engineering concepts.
 
 ## Architecture Overview
 
