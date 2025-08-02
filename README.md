@@ -1,4 +1,4 @@
-# Wikipedia Engineering Analysis Platform
+# Tech-Tree - Wikipedia Engineering Analysis Platform
 
 A sophisticated web application that recursively analyzes engineering concepts from Wikipedia, extracting fundamental principles and their interconnections to create interactive 3D knowledge trees.
 
