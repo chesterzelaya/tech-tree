@@ -103,8 +103,16 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = ({
     const canvas = canvasRef.current;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    const renderer = new THREE.WebGLRenderer({ 
+      canvas, 
+      alpha: true, 
+      antialias: true,
+      powerPreference: 'high-performance',
+      precision: 'highp'
+    });
     
+    // Appropriate DPI support for renderer
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     renderer.setClearColor(0x000000, 0);
     renderer.shadowMap.enabled = true;
@@ -151,30 +159,31 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = ({
         rootMesh.receiveShadow = true;
         (rootMesh as any).userData = { nodeData: rootNode, index: 0 };
 
-        // Enhanced root label with high DPI support
+        // Crisp root label with optimal DPI
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d')!;
         const dpr = window.devicePixelRatio || 1;
-        const width = 512 * dpr;
-        const height = 128 * dpr;
+        const baseWidth = 512;
+        const baseHeight = 128;
         
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = baseWidth * dpr;
+        canvas.height = baseHeight * dpr;
+        canvas.style.width = baseWidth + 'px';
+        canvas.style.height = baseHeight + 'px';
         context.scale(dpr, dpr);
         
-        // Enable text smoothing
+        // Optimal text rendering settings
         context.imageSmoothingEnabled = true;
-        (context as any).textRenderingOptimization = 'optimizeQuality';
+        context.imageSmoothingQuality = 'high';
+        context.textBaseline = 'middle';
         
-        context.shadowColor = 'rgba(25, 118, 210, 0.8)';
-        context.shadowBlur = 4;
+        // Clean text with subtle glow
+        context.shadowColor = 'rgba(25, 118, 210, 0.4)';
+        context.shadowBlur = 3;
         context.font = 'bold 32px "Space Mono", monospace';
         context.fillStyle = 'white';
         context.textAlign = 'center';
-        context.strokeStyle = 'rgba(25, 118, 210, 0.4)';
-        context.lineWidth = 1;
-        context.strokeText(rootNode.name, 256, 64);
-        context.fillText(rootNode.name, 256, 64);
+        context.fillText(rootNode.name, baseWidth / 2, baseHeight / 2);
 
         const rootTexture = new THREE.CanvasTexture(canvas);
         rootTexture.minFilter = THREE.LinearFilter;
@@ -235,30 +244,31 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = ({
           mesh.receiveShadow = true;
           (mesh as any).userData = { nodeData, index: nodeIndex };
 
-          // Create enhanced text label with high DPI support
+          // Crisp child node label with optimal DPI
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d')!;
           const dpr = window.devicePixelRatio || 1;
-          const width = 512 * dpr;
-          const height = 128 * dpr;
+          const baseWidth = 512;
+          const baseHeight = 128;
           
-          canvas.width = width;
-          canvas.height = height;
+          canvas.width = baseWidth * dpr;
+          canvas.height = baseHeight * dpr;
+          canvas.style.width = baseWidth + 'px';
+          canvas.style.height = baseHeight + 'px';
           context.scale(dpr, dpr);
           
-          // Enable text smoothing
+          // Optimal text rendering settings
           context.imageSmoothingEnabled = true;
-          (context as any).textRenderingOptimization = 'optimizeQuality';
+          context.imageSmoothingQuality = 'high';
+          context.textBaseline = 'middle';
           
-          context.shadowColor = 'rgba(25, 118, 210, 0.6)';
+          // Clean text with subtle glow
+          context.shadowColor = 'rgba(25, 118, 210, 0.3)';
           context.shadowBlur = 2;
           context.font = 'bold 24px "Space Mono", monospace';
           context.fillStyle = 'white';
           context.textAlign = 'center';
-          context.strokeStyle = 'rgba(25, 118, 210, 0.3)';
-          context.lineWidth = 0.5;
-          context.strokeText(nodeData.name, 256, 64);
-          context.fillText(nodeData.name, 256, 64);
+          context.fillText(nodeData.name, baseWidth / 2, baseHeight / 2);
 
           const texture = new THREE.CanvasTexture(canvas);
           texture.minFilter = THREE.LinearFilter;
@@ -456,8 +466,10 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = ({
     const handleResize = () => {
       if (!canvas || !sceneRef.current) return;
       const { camera, renderer } = sceneRef.current;
+      const dpr = Math.max(window.devicePixelRatio || 1, 2);
       camera.aspect = canvas.clientWidth / canvas.clientHeight;
       camera.updateProjectionMatrix();
+      renderer.setPixelRatio(dpr);
       renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     };
 
