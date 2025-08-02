@@ -6,7 +6,7 @@ export const API_CONFIG = {
 };
 
 export const APP_CONFIG = {
-  NAME: 'Wiki Engineering Analyzer',
+  NAME: 'Tech Tree',
   VERSION: '1.0.0',
   DESCRIPTION: 'Recursive analysis of engineering principles from Wikipedia',
   AUTHOR: 'Engineering Analysis Team',

@@ -16,7 +16,7 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
-import { Search, Settings, X, BookOpen } from 'lucide-react';
+import { Search, Settings, X } from 'lucide-react';
 import * as THREE from 'three';
 import { SearchRequest, SearchSuggestion, AnalysisResult } from '../types';
 import { WikiEngineAPI, handleAPIError, apiRateLimiter } from '../services/api';
@@ -261,41 +261,34 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
 
   return (
     <Box sx={{ position: 'relative' }}>
-      {/* Minimalist Interface */}
+      {/* Beautiful Glass Pill Interface */}
       <Paper 
         elevation={0} 
         sx={{ 
           position: 'relative',
           zIndex: 1,
-          p: 2,
-          background: 'rgba(0, 0, 0, 0.8)',
-          backdropFilter: 'blur(20px)',
+          p: 3,
+          background: 'rgba(255, 255, 255, 0.05)',
+          backdropFilter: 'blur(30px)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '16px',
+          borderRadius: '50px',
+          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.3), 0 0 60px rgba(25, 118, 210, 0.2), inset 0 0 30px rgba(25, 118, 210, 0.08)',
           transition: 'all 0.3s ease-in-out',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: '-3px',
+            left: '-3px',
+            right: '-3px',
+            bottom: '-3px',
+            background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.3), rgba(25, 118, 210, 0.1), rgba(25, 118, 210, 0.3))',
+            borderRadius: '53px',
+            zIndex: -1,
+            filter: 'blur(10px)',
+          },
         }}
       >
         <Grid container spacing={2}>
-          {/* Minimalist Search */}
-          <Grid size={12}>
-            <Typography 
-              variant="h6" 
-              gutterBottom 
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 1,
-                color: 'white',
-                fontWeight: 300,
-                textAlign: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <BookOpen size={20} />
-              Engineering Knowledge Tree
-            </Typography>
-          </Grid>
-
         {/* Search Input */}
         <Grid size={12}>
           <Autocomplete
@@ -314,23 +307,37 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                 onFocus={handleSearchFocus}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                    backdropFilter: 'blur(15px)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '30px',
                     transition: 'all 0.3s ease-in-out',
+                    color: 'white',
+                    '& fieldset': {
+                      border: 'none',
+                    },
                     '&:hover': {
-                      borderColor: 'rgba(25, 118, 210, 0.5)',
-                      boxShadow: '0 0 15px rgba(25, 118, 210, 0.2)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                      boxShadow: '0 0 20px rgba(25, 118, 210, 0.3)',
                     },
                     '&.Mui-focused': {
-                      borderColor: '#1976d2',
-                      boxShadow: '0 0 20px rgba(25, 118, 210, 0.3)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      boxShadow: '0 0 30px rgba(25, 118, 210, 0.4)',
                     },
                   },
                   '& .MuiInputLabel-root': {
-                    color: 'rgba(25, 118, 210, 0.8)',
-                    fontWeight: 500,
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    fontWeight: 400,
+                    '&.Mui-focused': {
+                      color: 'rgba(25, 118, 210, 0.9)',
+                    },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: 'white',
+                    '&::placeholder': {
+                      color: 'rgba(255, 255, 255, 0.5)',
+                      opacity: 1,
+                    },
                   },
                 }}
                 InputProps={{
@@ -378,12 +385,21 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
               disabled={isLoading || !searchTerm.trim() || rateLimited}
               sx={{ 
                 minWidth: 120,
-                background: 'linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)',
-                borderRadius: '12px',
-                boxShadow: '0 2px 10px rgba(25, 118, 210, 0.3)',
+                background: 'rgba(25, 118, 210, 0.8)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '25px',
+                border: '1px solid rgba(25, 118, 210, 0.3)',
+                boxShadow: '0 4px 20px rgba(25, 118, 210, 0.3), 0 0 20px rgba(25, 118, 210, 0.2)',
+                color: 'white',
+                fontWeight: 600,
                 '&:hover': {
-                  boxShadow: '0 4px 15px rgba(25, 118, 210, 0.5)',
-                  transform: 'translateY(-1px)',
+                  background: 'rgba(25, 118, 210, 0.9)',
+                  boxShadow: '0 6px 25px rgba(25, 118, 210, 0.4), 0 0 30px rgba(25, 118, 210, 0.3)',
+                  transform: 'translateY(-2px)',
+                },
+                '&:disabled': {
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: 'rgba(255, 255, 255, 0.5)',
                 },
                 transition: 'all 0.3s ease-in-out',
               }}
@@ -397,14 +413,18 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
               onClick={handleClear}
               disabled={isLoading}
               sx={{
-                borderColor: 'rgba(255, 255, 255, 0.3)',
+                borderColor: 'rgba(255, 255, 255, 0.2)',
                 color: 'rgba(255, 255, 255, 0.8)',
-                borderRadius: '12px',
+                borderRadius: '25px',
                 minWidth: 80,
+                backdropFilter: 'blur(10px)',
+                background: 'rgba(255, 255, 255, 0.05)',
                 '&:hover': {
-                  borderColor: 'rgba(255, 255, 255, 0.6)',
+                  borderColor: 'rgba(255, 255, 255, 0.4)',
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  transform: 'translateY(-1px)',
                 },
+                transition: 'all 0.3s ease-in-out',
               }}
             >
               Clear
