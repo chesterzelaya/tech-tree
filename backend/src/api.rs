@@ -2,8 +2,8 @@ use crate::cache::WikiEngineCache;
 use crate::types::{AnalysisResult, SearchRequest, Result};
 use crate::WikiEngine;
 use axum::{
+    debug_handler,
     extract::{Query, State},
-    http::StatusCode,
     response::Json,
     routing::{get, post},
     Router,
@@ -64,14 +64,21 @@ impl<T> ApiResponse<T> {
     }
 }
 
-pub fn create_router() -> Result<Router> {
+pub fn create_router_with_state(state: SharedState) -> Result<Router> {
     let router = Router::new()
         .route("/health", get(health_check))
         .route("/analyze", post(analyze_term))
         .route("/suggest", get(suggest_terms))
-        .layer(CorsLayer::permissive());
+        .layer(CorsLayer::permissive())
+        .with_state(state);
     
     Ok(router)
+}
+
+pub fn create_router() -> Result<Router> {
+    // For backward compatibility, create state internally
+    let state = Arc::new(WikiEngineState::new()?);
+    create_router_with_state(state)
 }
 
 pub async fn health_check() -> Json<ApiResponse<HashMap<String, String>>> {
@@ -83,62 +90,21 @@ pub async fn health_check() -> Json<ApiResponse<HashMap<String, String>>> {
     Json(ApiResponse::success(health_data))
 }
 
-pub async fn analyze_term() -> Json<ApiResponse<AnalysisResult>> {
-    // Mock response that matches the expected structure
-    tracing::info!("Analysis endpoint called");
+#[debug_handler]
+pub async fn analyze_term(
+    State(state): State<SharedState>,
+    Json(request): Json<SearchRequest>,
+) -> Json<ApiResponse<AnalysisResult>> {
+    tracing::info!("Analysis endpoint called for term: {}", request.term);
     
-    use crate::types::{AnalysisResult, AnalysisNode, EngineeringPrinciple, PrincipleCategory};
-    use std::collections::HashMap;
-    
-    let mock_principle = EngineeringPrinciple {
-        id: "mock-1".to_string(),
-        title: "Structural Load Distribution".to_string(),
-        description: "Bridges distribute loads through their structural elements to safely transfer forces from the deck to the foundations.".to_string(),
-        category: PrincipleCategory::Structural,
-        confidence: 0.85,
-        source_url: "https://en.wikipedia.org/wiki/Bridge".to_string(),
-        related_terms: vec!["load".to_string(), "structure".to_string(), "foundation".to_string()],
-    };
-    
-    let mock_child_principle = EngineeringPrinciple {
-        id: "mock-2".to_string(),
-        title: "Material Strength".to_string(),
-        description: "Steel and concrete provide the necessary strength to resist tension and compression forces.".to_string(),
-        category: PrincipleCategory::Material,
-        confidence: 0.78,
-        source_url: "https://en.wikipedia.org/wiki/Steel".to_string(),
-        related_terms: vec!["steel".to_string(), "concrete".to_string(), "strength".to_string()],
-    };
-    
-    let mut child_children = HashMap::new();
-    let child_node = AnalysisNode {
-        term: "steel".to_string(),
-        principles: vec![mock_child_principle],
-        children: child_children,
-        depth: 1,
-        processing_time_ms: 45,
-    };
-    
-    let mut children = HashMap::new();
-    children.insert("steel".to_string(), Box::new(child_node));
-    
-    let root_node = AnalysisNode {
-        term: "bridge".to_string(),
-        principles: vec![mock_principle],
-        children,
-        depth: 0,
-        processing_time_ms: 120,
-    };
-    
-    let mock_result = AnalysisResult {
-        root_term: "bridge".to_string(),
-        tree: root_node,
-        total_processing_time_ms: 165,
-        total_principles: 2,
-        max_depth_reached: 1,
-    };
-    
-    Json(ApiResponse::success(mock_result))
+    // Use the real WikiEngine to analyze the term with Wikipedia API calls
+    match state.engine.analyze_recursive(&request).await {
+        Ok(result) => Json(ApiResponse::success(result)),
+        Err(e) => {
+            tracing::error!("Analysis failed for term '{}': {}", request.term, e);
+            Json(ApiResponse::error(format!("Analysis failed: {}", e)))
+        }
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -154,20 +120,21 @@ pub struct SuggestQuery {
     pub limit: Option<u8>,
 }
 
-pub async fn suggest_terms() -> Json<ApiResponse<Vec<SearchSuggestion>>> {
-    // Simplified handler for now - will be expanded later
-    tracing::info!("Suggest endpoint called");
-    let mock_suggestions = vec![
-        SearchSuggestion {
-            term: "bridge".to_string(),
-            confidence: 0.9,
-            category: "Structural".to_string(),
-        },
-        SearchSuggestion {
-            term: "engine".to_string(),
-            confidence: 0.8,
-            category: "Mechanical".to_string(),
-        },
-    ];
-    Json(ApiResponse::success(mock_suggestions))
+#[debug_handler]
+pub async fn suggest_terms(
+    State(state): State<SharedState>,
+    Query(params): Query<SuggestQuery>,
+) -> Json<ApiResponse<Vec<SearchSuggestion>>> {
+    tracing::info!("Suggest endpoint called for query: {}", params.query);
+    
+    let limit = params.limit.unwrap_or(8);
+    
+    // Use the real WikiEngine to get search suggestions from Wikipedia API
+    match state.engine.suggest_terms(&params.query, limit).await {
+        Ok(suggestions) => Json(ApiResponse::success(suggestions)),
+        Err(e) => {
+            tracing::error!("Suggestion failed for query '{}': {}", params.query, e);
+            Json(ApiResponse::error(format!("Suggestion failed: {}", e)))
+        }
+    }
 }

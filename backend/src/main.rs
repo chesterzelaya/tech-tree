@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use tracing::{info, error};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use wiki_engine::api::create_router;
+use wiki_engine::api::{create_router_with_state, WikiEngineState};
 use wiki_engine::cache::{start_cache_cleanup_task, WikiEngineCache};
 
 #[tokio::main]
@@ -17,19 +17,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Starting Wiki Engine Backend Server");
 
-    // Create the application router
-    let app = create_router().expect("Failed to create router");
-
+    // Create WikiEngine state with cache
+    let state = Arc::new(WikiEngineState::new().expect("Failed to create WikiEngine state"));
+    
     // Start cache cleanup task
-    let cache = Arc::new(WikiEngineCache::new());
-    tokio::spawn(start_cache_cleanup_task(Arc::clone(&cache)));
+    tokio::spawn(start_cache_cleanup_task(Arc::clone(&state.cache)));
 
     // Warm up cache with common engineering terms
     let common_terms = [
         "bridge", "engine", "motor", "gear", "lever", "pulley", "circuit", "transistor",
         "beam", "column", "foundation", "steel", "concrete", "aluminum",
     ];
-    cache.warm_up(&common_terms);
+    state.cache.warm_up(&common_terms);
+
+    // Create the application router with state
+    let app = create_router_with_state(state).expect("Failed to create router");
 
     // Configure server
     let port = std::env::var("PORT").unwrap_or_else(|_| "3001".to_string());

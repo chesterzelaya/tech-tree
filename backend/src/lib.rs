@@ -9,7 +9,7 @@ use crate::cache::WikiEngineCache;
 use crate::types::{AnalysisNode, AnalysisResult, EngineeringPrinciple, SearchRequest, Result, WikiEngineError};
 use crate::wikipedia::WikipediaClient;
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 pub struct WikiEngine {
@@ -51,13 +51,13 @@ impl WikiEngine {
         }
 
         // Perform recursive analysis
-        let mut visited = HashSet::new();
+        let visited = Arc::new(Mutex::new(HashSet::new()));
         let root_node = self.analyze_term_recursive(
             &request.term,
             0,
             max_depth,
             max_results,
-            &mut visited,
+            visited,
         ).await?;
 
         let total_processing_time = start_time.elapsed().as_millis() as u64;
@@ -89,23 +89,26 @@ impl WikiEngine {
         current_depth: u8,
         max_depth: u8,
         max_results: u8,
-        visited: &'a mut HashSet<String>,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<AnalysisNode>> + 'a>> {
+        visited: Arc<Mutex<HashSet<String>>>,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<AnalysisNode>> + Send + 'a>> {
         Box::pin(async move {
         let term_start = Instant::now();
         
         // Prevent infinite recursion
-        if visited.contains(term) || current_depth >= max_depth {
-            return Ok(AnalysisNode {
-                term: term.to_string(),
-                principles: vec![],
-                children: HashMap::new(),
-                depth: current_depth,
-                processing_time_ms: term_start.elapsed().as_millis() as u64,
-            });
+        {
+            let visited_lock = visited.lock().unwrap();
+            if visited_lock.contains(term) || current_depth >= max_depth {
+                return Ok(AnalysisNode {
+                    term: term.to_string(),
+                    principles: vec![],
+                    children: HashMap::new(),
+                    depth: current_depth,
+                    processing_time_ms: term_start.elapsed().as_millis() as u64,
+                });
+            }
         }
 
-        visited.insert(term.to_string());
+        visited.lock().unwrap().insert(term.to_string());
         tracing::debug!("Analyzing term '{}' at depth {}", term, current_depth);
 
         // Get Wikipedia page
@@ -140,13 +143,18 @@ impl WikiEngine {
             .collect::<Vec<_>>();
 
         for concept in concepts_to_analyze {
-            if !visited.contains(&concept) && concept != term {
+            let should_analyze = {
+                let visited_lock = visited.lock().unwrap();
+                !visited_lock.contains(&concept) && concept != term
+            };
+            
+            if should_analyze {
                 match self.analyze_term_recursive(
                     &concept,
                     current_depth + 1,
                     max_depth,
                     max_results,
-                    visited,
+                    Arc::clone(&visited),
                 ).await {
                     Ok(child_node) => {
                         children.insert(concept.clone(), Box::new(child_node));
@@ -158,7 +166,7 @@ impl WikiEngine {
             }
         }
 
-        visited.remove(term);
+        visited.lock().unwrap().remove(term);
 
         Ok(AnalysisNode {
             term: term.to_string(),
