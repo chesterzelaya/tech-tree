@@ -1,0 +1,34 @@
+[package]
+name = "wiki-engine-backend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.7"
+tokio = { version = "1.0", features = ["full"] }
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+regex = "1.10"
+scraper = "0.19"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+dashmap = "5.5"
+urlencoding = "2.1"
+chrono = { version = "0.4", features = ["serde"] }
+
+# Optional WASM support
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = "0.3"
+serde-wasm-bindgen = "0.6"
+
+[lib]
+name = "wiki_engine"
+crate-type = ["cdylib", "rlib"]
